@@ -15,22 +15,16 @@
         var moduleContent = '',
             moduleUri;
         
-        for (var i = 0, len = require.paths.length; i < len; i++) {
-            moduleUri = require.paths[i] + '/' + id + '.js';
-            moduleContent = '';
-            
-            var file = new java.io.File(moduleUri);
-            if ( file.exists() && file.canRead() && !file.isDirectory() ) {
-                try {    
-                    var scanner = new java.util.Scanner(file).useDelimiter("\\Z");
-                    moduleContent = String( scanner.next() );
-                }
-                catch(ignored) {
-                    throw 'Unable to read file at: '+moduleUri;
-                }
-                
-                if (moduleContent) { break; }
-            }
+        moduleUri = require.resolve(id);
+        moduleContent = '';
+
+        var file = new java.io.File(moduleUri);
+        try {    
+            var scanner = new java.util.Scanner(file).useDelimiter("\\Z");
+            moduleContent = String( scanner.next() );
+        }
+        catch(ignored) {
+            throw 'Unable to read file at: '+moduleUri;
         }
         
         if (moduleContent) {
@@ -67,11 +61,17 @@
         // TODO: 1. load node core modules
         
         // 2. dot-relative module id, like './foo/bar'
-        var parts = id.match(/^\.\/(.+)$/),
-            basename = parts? parts[1] : id;
+        var parts = id.match(/^(\.\/)(.+)$/),
+            isRelative = false,
+            basename = id;
+        
+        if (parts) {
+            isRelative = !!parts[1];
+            basename = parts[2];
+        }
         
         if (typeof basename !== 'undefined') {
-            var root = toDir(require.root[0] || '.'),
+            var root = (isRelative? toDir(require.root[0] || '.') : '.'),
                 rootedId = root + '/' + basename,
                 uri = '';
             
