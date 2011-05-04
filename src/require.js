@@ -15,7 +15,7 @@
         var moduleContent = '',
             moduleUri;
         
-        moduleUri = toAbsolute( require.resolve(id) );
+        moduleUri = require.resolve(id);
         moduleContent = '';
 
         var file = new java.io.File(moduleUri);
@@ -75,18 +75,10 @@
                 rootedId = root + '/' + basename,
                 uri = '';
             
-            if ( uri = loadAsFile(rootedId) ) {
-                //return uri;
-            }
-            else if ( uri = loadAsDir(rootedId) ) {
-                //return uri;
-            }
-            else if ( uri = loadNodeModules(rootedId) ) {
-                //return uri;
-            }
-            else if ( uri = nodeModulesPaths(rootedId) ) {
-                //return uri;
-            }
+            if ( uri = loadAsFile(rootedId) ) { }
+            else if ( uri = loadAsDir(rootedId) ) { }
+            else if ( uri = loadNodeModules(rootedId) ) { }
+            else if ( uri = nodeModulesPaths(rootedId) ) { }
             
             if (uri !== '') return toAbsolute(uri);
             
