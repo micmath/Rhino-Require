@@ -40,21 +40,21 @@ var test = module.exports = {
             t.done();
         }
     },
-    'Loading from package.json.': {
+    'Resolve from package.json.': {
         'The require.resolve function should use the "main" property from package.json.': function(t) {
             t.expect(1);
             t.equal( require.resolve('./mock/bar'), toAbsolute('./mock/bar/myModuleLib/bar.js') );
             t.done();
         }
     },
-    'Loading from index file.': {
+    'Resolve from index file.': {
         'The require.resolve function should use the "index.js" file.': function(t) {
             t.expect(1);
             t.equal( require.resolve('./mock/zop'), toAbsolute('./mock/zop/index.js') );
             t.done();
         }
     },
-    'Loading from require.paths.': {
+    'Resolve from require.paths.': {
         'The require.resolve function should use the require.paths values.': function(t) {
             t.expect(1);
             require.paths.push('./mock');
@@ -64,7 +64,7 @@ var test = module.exports = {
             t.done();
         }
     },
-    'Loading from node_modules.': {
+    'Resolve from node_modules.': {
         'The require.resolve function should use the node_modules dir.': function(t) {
             t.expect(1);
             t.equal( require.resolve('foobar'), toAbsolute('./node_modules/foobar.js') );
@@ -73,6 +73,23 @@ var test = module.exports = {
         'The require.resolve function should look for index in node_modules dir.': function(t) {
             t.expect(1);
             t.equal( require.resolve('baz'), toAbsolute('./node_modules/baz/index.js') );
+            t.done();
+        }
+    },
+    'Require from package.json.': {
+        'The required module should be returned when it is listed in package.json.': function(t) {
+            t.expect(3);
+            var bar = require('mock/bar');
+            t.equal( typeof bar, 'object' );
+            t.equal( bar.name, 'bar' );
+            t.equal( bar.extras.name, 'extras' );
+            t.done();
+        },
+        'The required dot-relative module should be returned when it is listed in package.json.': function(t) {
+            t.expect(2);
+            var bar = require('./mock/bar');
+            t.equal( typeof bar, 'object' );
+            t.equal( bar.name, 'bar' );
             t.done();
         }
     }

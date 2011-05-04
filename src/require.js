@@ -23,8 +23,8 @@
             var scanner = new java.util.Scanner(file).useDelimiter("\\Z");
             moduleContent = String( scanner.next() );
         }
-        catch(ignored) {
-            throw 'Unable to read file at: '+moduleUri;
+        catch(e) {
+            throw 'Unable to read file at: '+moduleUri+', '+e;
         }
         
         if (moduleContent) {
