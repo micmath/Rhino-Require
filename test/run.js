@@ -1,11 +1,12 @@
 // USAGE: java -classpath ~/Scripts/js.jar org.mozilla.javascript.tools.shell.Main test.js
 
-load('test/lib/nodeunit.js');
-load('test/lib/jsmock.js');
+load('./lib/nodeunit.js');
+//load('lib/jsmock.js');
 
-load('src/require.js');
+load('../src/require.js');
 
-var test = {
+module = typeof module === 'undefined'? {} : module;
+var test = module.exports = {
     'Basic tests.': {
         'The require function should be defined.': function(t) {
             t.expect(1);
@@ -21,36 +22,43 @@ var test = {
         },
         'When an id starts with "./" it should resolve relative to the current working directory.': function(t) {
             t.expect(1);
-            t.equal(require.resolve('./test/mock/foo'), './test/mock/foo.js');
+            t.equal( require.resolve( './mock/foo'), toAbsolute('./mock/foo.js') );
             t.done();
         },
         'When an id starts with "./" it should resolve relative to the current running module.': function(t) {
             t.expect(1);
-            require.root.unshift('./test/mock/bar.js');
-            t.equal(require.resolve('./foo'), './test/mock/foo.js');
-            require.root.shift();
+            require._root.unshift('./mock/bar.js');
+            t.equal( require.resolve('./foo'), toAbsolute('./mock/foo.js') );
+            require._root.shift();
+            t.done();
+        },
+        'When an id does not start with "./" it should resolve relative to the cwd.': function(t) {
+            t.expect(1);
+            require._root.unshift('blah/one/two.js');
+            t.equal( require.resolve('mock/foo'), toAbsolute('./mock/foo.js') );
+            require._root.shift();
             t.done();
         }
     },
     'Loading from package.json.': {
         'The require.resolve function should use the "main" property from package.json.': function(t) {
             t.expect(1);
-            t.equal(require.resolve('./test/mock/bar'), './test/mock/bar/myModuleLib/bar.js');
+            t.equal( require.resolve('./mock/bar'), toAbsolute('./mock/bar/myModuleLib/bar.js') );
             t.done();
         }
     },
     'Loading from index file.': {
         'The require.resolve function should use the "index.js" file.': function(t) {
             t.expect(1);
-            t.equal(require.resolve('./test/mock/zop'), './test/mock/zop/index.js');
+            t.equal( require.resolve('./mock/zop'), toAbsolute('./mock/zop/index.js') );
             t.done();
         }
     },
     'Loading from require.paths.': {
         'The require.resolve function should use the require.paths values.': function(t) {
             t.expect(1);
-            require.paths.push('./test/mock');
-            t.equal(require.resolve('foo'), './test/mock/foo.js');
+            require.paths.push('./mock');
+            t.equal( require.resolve('foo'), toAbsolute('./mock/foo.js') );
             require.paths.pop();
             
             t.done();
@@ -59,15 +67,25 @@ var test = {
     'Loading from node_modules.': {
         'The require.resolve function should use the node_modules dir.': function(t) {
             t.expect(1);
-            t.equal(require.resolve('foobar'), './node_modules/foobar.js');
+            t.equal( require.resolve('foobar'), toAbsolute('./node_modules/foobar.js') );
             t.done();
         },
         'The require.resolve function should look for index in node_modules dir.': function(t) {
             t.expect(1);
-            t.equal(require.resolve('baz'), './node_modules/baz/index.js');
+            t.equal( require.resolve('baz'), toAbsolute('./node_modules/baz/index.js') );
             t.done();
         }
     }
 };
+
+var cwd = (typeof __dirname === 'undefined')? ''+new java.io.File('.').getAbsolutePath() : __dirname;
+function toAbsolute(relPath) {
+    if ( /^\//.test(relPath) ) return relPath;
     
+    relPath = relPath.replace(/^\.\//, '');
+    var absPath = cwd + '/' + relPath;
+    absPath = absPath.replace(/\/[^\/]+\/\.\.\//g, '/').replace(/\/\.\//g, '/');
+    return absPath;
+}
+
 nodeunit.run(test);

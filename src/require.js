@@ -15,7 +15,7 @@
         var moduleContent = '',
             moduleUri;
         
-        moduleUri = require.resolve(id);
+        moduleUri = toAbsolute( require.resolve(id) );
         moduleContent = '';
 
         var file = new java.io.File(moduleUri);
@@ -34,9 +34,9 @@
                     module = { id: id, uri: moduleUri };
         
                 
-                    require.root.unshift(moduleUri);
+                    require._root.unshift(moduleUri);
                     f.call({}, require, exports, module);
-                    require.root.shift();
+                    require._root.shift();
                 }
                 catch(e) {
                     throw 'Unable to require source code from "' + moduleUri + '": ' + e.toSource();
@@ -51,7 +51,7 @@
         
         return exports;
     }
-    require.root = [''];
+    require._root = [''];
     require.paths = [];
     require.cache = {}; // cache module exports. Like: {id: exported}
     
@@ -71,22 +71,24 @@
         }
         
         if (typeof basename !== 'undefined') {
-            var root = (isRelative? toDir(require.root[0] || '.') : '.'),
+            var root = (isRelative? toDir(require._root[0] || '.') : '.'),
                 rootedId = root + '/' + basename,
                 uri = '';
             
             if ( uri = loadAsFile(rootedId) ) {
-                return uri;
+                //return uri;
             }
             else if ( uri = loadAsDir(rootedId) ) {
-                return uri;
+                //return uri;
             }
             else if ( uri = loadNodeModules(rootedId) ) {
-                return uri;
+                //return uri;
             }
             else if ( uri = nodeModulesPaths(rootedId) ) {
-                return uri;
+                //return uri;
             }
+            
+            if (uri !== '') return toAbsolute(uri);
             
             throw 'Require Error: Not found.';
         }
@@ -136,6 +138,12 @@
      */
     function getCwd() {
         return toDir( ''+new java.io.File('.').getAbsolutePath() ).replace(/\/\.$/, '');
+    }
+    
+    function toAbsolute(relPath) {
+        absPath = ''+new java.io.File(relPath).getAbsolutePath();
+        absPath = absPath.replace(/\/[^\/]+\/\.\.\//g, '/').replace(/\/\.\//g, '/');
+        return absPath;
     }
     
     /** Assume the id is a file, try to find it.
