@@ -9,9 +9,9 @@
     all present and future rights to this code under copyright law.
  */
 
-(function(global) {
+(function() {
 
-    var require = global.require = function(id) {
+    var require = global.require = function(id) { /*debug*///console.log('require('+id+')');
         var moduleContent = '',
             moduleUri;
         
@@ -31,7 +31,7 @@
                 try {
                     var f = new Function('require', 'exports', 'module', moduleContent),
                     exports = require.cache[moduleUri] || {},
-                    module = { id: id, uri: moduleUri };
+                    module = { id: id, uri: moduleUri, exports: exports };
         
                 
                     require._root.unshift(moduleUri);
@@ -61,24 +61,33 @@
         // TODO: 1. load node core modules
         
         // 2. dot-relative module id, like './foo/bar'
-        var parts = id.match(/^(\.\/)(.+)$/),
+        var parts = id.match(/^(\.?\.\/|\/)(.+)$/),
             isRelative = false,
+            isAbsolute = false,
             basename = id;
         
         if (parts) {
-            isRelative = !!parts[1];
+            isRelative = parts[1] === './' || parts[1] === '../';
+            isAbsolute = parts[1] === '/';
             basename = parts[2];
         }
         
         if (typeof basename !== 'undefined') {
+            
+            if (isAbsolute) {
+                rootedId = id;
+            }
+            else {
             var root = (isRelative? toDir(require._root[0] || '.') : '.'),
-                rootedId = root + '/' + basename,
+                    rootedId = (root + '/' + id).replace(/\/[^\/]+\/\.\.\//g, '/').replace(/\/\.\//g, '/'),
                 uri = '';
+            }
             
             if ( uri = loadAsFile(rootedId) ) { }
             else if ( uri = loadAsDir(rootedId) ) { }
             else if ( uri = loadNodeModules(rootedId) ) { }
-            else if ( uri = nodeModulesPaths(rootedId) ) { }
+            else if ( uri = nodeModulesPaths(rootedId, 'rhino_modules') ) { }
+            else if ( uri = nodeModulesPaths(rootedId, 'node_modules') ) { }
             
             if (uri !== '') return toAbsolute(uri);
             
@@ -152,15 +161,15 @@
      */
     function loadAsDir(id) {
         if (!isDir(id)) {
-            id = toDir(id);
+           return;
         }
-        
         // look for the "main" property of the package.json file
         if ( isFile(id+'/package.json') ) {
             var packageJson = readFileSync(id+'/package.json', 'utf-8');
             eval( 'packageJson = '+ packageJson);
             if (packageJson.hasOwnProperty('main')) {
-                return (id + '/' + packageJson.main).replace(/\/\.?\//g, '/');
+                var main = (id + '/' + packageJson.main).replace(/\/\.?\//g, '/');
+                return require.resolve(main);
             }
         }
         
@@ -190,7 +199,7 @@
         }
     }
     
-    function nodeModulesPaths(id) {
+    function nodeModulesPaths(id, moduleFolder) {
         var cwd = getCwd(),
             dirs = cwd.split('/'),
             dir,
@@ -200,7 +209,7 @@
 
         while (dirs.length) {
             dir = dirs.join('/');
-            path = dir+'/node_modules';
+            path = dir+'/'+moduleFolder;
 
             if ( isDir(path) ) {
                 filename = (path+'/'+id).replace(/\/\.?\//g, '/');
@@ -241,4 +250,4 @@
         }
     }
 
-})(this);
+})();

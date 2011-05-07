@@ -562,7 +562,7 @@ var reporter = {};
     //// nextTick implementation with browser-compatible fallback ////
     async.nextTick = function(fn){
         if(typeof process == 'undefined' || !(process.nextTick)){
-            if (typeof setTimeout !== 'undefined') setTimeout(fn, 0);
+            if (typeof setTimeout !== 'undefined') { setTimeout(fn, 0); }
             else fn();
         }
         else process.nextTick(fn);
