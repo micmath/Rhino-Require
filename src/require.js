@@ -9,7 +9,7 @@
     all present and future rights to this code under copyright law.
  */
 
-(function() {
+(function(global) {
 
     var require = global.require = function(id) { /*debug*///console.log('require('+id+')');
         var moduleContent = '',
@@ -250,4 +250,4 @@
         }
     }
 
-})();
+})(this);
