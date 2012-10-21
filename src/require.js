@@ -71,7 +71,7 @@
             basename = id;
         
         if (parts) {
-            isRelative = parts[1] === './' || parts[1] === '.\\' || parts[1] === '../' || parts[1] === '.\\';
+            isRelative = parts[1] === './' || parts[1] === '.\\' || parts[1] === '../' || parts[1] === '..\\';
             isAbsolute = parts[1] === '/' || parts[1] === '\\';
             basename = parts[2];
         }
