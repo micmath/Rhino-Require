@@ -1,6 +1,11 @@
 Rhino-Require
 ====
 
+> NOTICE: This project is no longer necessary: as of version 1.7R3, Mozilla
+Rhino has a built-in, fully compliant CommonJS module implementation which
+you should use. I leave this project here only for reference.
+
+
 A nodejs-like implementation of the commonjs `require` function, implemented
 to be compatible with the Mozilla Rhino JavaScript engine.
 
