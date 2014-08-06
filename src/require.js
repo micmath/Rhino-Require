@@ -19,6 +19,10 @@
         
         moduleUri = require.resolve(id);
         moduleContent = '';
+        
+        if (require.cache[moduleUri]) {
+          return require.cache[moduleUri];
+        }
 
         var file = new java.io.File(moduleUri);
         try {    
@@ -45,7 +49,7 @@
                 }
                 
                 exports = module.exports || exports;
-                require.cache[id] = exports;
+                require.cache[moduleUri] = exports;
         }
         else {
             throw 'The requested module cannot be returned: no content for id: "' + id + '" in paths: ' + require.paths.join(', ');
@@ -82,9 +86,9 @@
                 rootedId = id;
             }
             else {
-				var root = (isRelative? toDir(require._root[0] || '.') : '.'),
-					rootedId = deDotPath(root + SLASH + id),
-					uri = '';
+        var root = (isRelative? toDir(require._root[0] || '.') : '.'),
+          rootedId = deDotPath(root + SLASH + id),
+          uri = '';
             }
             
             if ( uri = loadAsFile(rootedId) ) { }
@@ -106,7 +110,7 @@
         var file = new java.io.File(path);
         
         if (file.isDirectory()) {
-			return path;
+          return path;
         }
         
         var parts = path.split(/[\\\/]/);
@@ -152,8 +156,8 @@
     
     function deDotPath(path) {
         return String(path)
-			.replace(/(\/|\\)[^\/\\]+\/\.\.(\/|\\)/g, SLASH)
-			.replace(/(\/|\\)\.(\/|\\|$)/g, SLASH);
+      .replace(/(\/|\\)[^\/\\]+\/\.\.(\/|\\)/g, SLASH)
+      .replace(/(\/|\\)\.(\/|\\|$)/g, SLASH);
     }
     
     /** Assume the id is a file, try to find it.
@@ -189,9 +193,13 @@
     
     function loadNodeModules(id) {
         var path,
-            uri;
+            uri,
+            cwd = getCwd(),
+            dirs = cwd.split(SLASH),
+            dir = dirs.join(SLASH);
         for (var i = 0, len = require.paths.length; i < len; i++) {
             path = require.paths[i];
+            path = deDotPath(dir + SLASH + path);
             if (isDir(path)) {
                 path = deDotPath(path + SLASH + id);
                 
